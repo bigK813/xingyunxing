@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>幸运猩 · 彩票智能预测</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦍</text></svg>">
+<style>
+:root {
+  --bg: #0a0a14;
+  --surface: #12122a;
+  --surface2: #1a1a3a;
+  --surface3: #222250;
+  --border: #1e1e40;
+  --border-light: #2a2a55;
+  --text: #f0f0f8;
+  --text2: #8888bb;
+  --text3: #5a5a88;
+  --red: #ff4757;
+  --red2: #ff6b81;
+  --blue: #3742fa;
+  --blue2: #5352ed;
+  --gold: #ffa502;
+  --gold2: #eccc68;
+  --green: #2ed573;
+  --accent: #ff6348;
+  --accent2: #ff7675;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; -webkit-tap-highlight-color:transparent; scroll-behavior:smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255,71,87,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(55,66,250,0.06) 0%, transparent 50%);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ── Header ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(10,10,20,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 20px; font-weight: 800; letter-spacing: -0.3px;
+}
+.logo-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: linear-gradient(135deg, #ff6348, #ff4757);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+}
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text2); font-size: 15px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.icon-btn:active { background: var(--surface3); color: var(--text); transform: scale(0.92); }
+.icon-btn.spinning { animation: spin .6s cubic-bezier(.4,0,.2,1); pointer-events: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Game Switcher ── */
+.game-switcher {
+  display: flex; gap: 6px; padding: 12px 16px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.game-switcher::-webkit-scrollbar { display: none; }
+.game-chip {
+  flex-shrink: 0; padding: 10px 20px; border-radius: 24px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text2); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .25s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap; user-select: none; position: relative;
+}
+.game-chip.active {
+  background: linear-gradient(135deg, #ff6348, #ff4757);
+  color: #fff; border-color: transparent;
+  box-shadow: 0 4px 20px rgba(255,71,87,0.35);
+  transform: scale(1.03);
+}
+.game-chip:active { transform: scale(0.95); }
+
+/* ── Countdown Banner ── */
+.countdown-bar {
+  margin: 4px 16px 0; padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; font-size: 12px;
+}
+.countdown-bar .cd-icon { font-size: 18px; }
+.countdown-bar .cd-info { flex: 1; }
+.countdown-bar .cd-game { font-weight: 700; color: var(--gold); }
+.countdown-bar .cd-time { color: var(--text2); margin-top: 1px; }
+.countdown-bar .cd-clock {
+  font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--accent); min-width: 54px; text-align: center;
+  background: var(--surface); padding: 4px 10px; border-radius: var(--radius-xs);
+}
+.countdown-bar .cd-live {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  animation: pulse 1.5s ease infinite; flex-shrink: 0;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46,213,115,.4); }
+  50% { opacity: .6; box-shadow: 0 0 0 6px rgba(46,213,115,0); }
+}
+.countdown-bar .cd-tag {
+  padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;
+  background: rgba(46,213,115,.15); color: var(--green);
+}
+
+/* ── Cards ── */
+.container { max-width: 500px; margin: 0 auto; padding: 0 14px; }
+.card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 14px;
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+.card-subtitle { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+/* ── Lottery Ticket Card ── */
+.ticket-card {
+  background: linear-gradient(145deg, #1a1a3a 0%, #151530 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 20px 16px; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.ticket-card::after {
+  content: ''; position: absolute; top: 50%; left: -6px; transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%; background: var(--bg);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.3);
+}
+.ticket-card::before {
+  content: ''; position: absolute; top: 50%; right: -6px; transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%; background: var(--bg);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.3);
+}
+.ticket-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 12px 12px; margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(255,255,255,0.1);
+}
+.ticket-game { font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: 1px; }
+.ticket-issue { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--gold); }
+.ticket-numbers {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  padding: 4px 0;
+}
+.ticket-date {
+  text-align: center; margin-top: 12px; padding-top: 12px;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  font-size: 12px; color: var(--text2);
+}
+
+/* ── Number Balls ── */
+.ball {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
+  position: relative;
+  animation: ballIn .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes ballIn {
+  from { transform: scale(0) rotate(-180deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.ball.red {
+  background: radial-gradient(circle at 35% 35%, #ff6b81, #e74c3c 60%, #c0392b);
+  box-shadow: 0 4px 15px rgba(231,76,60,.4), inset 0 -2px 4px rgba(0,0,0,.2);
+}
+.ball.blue {
+  background: radial-gradient(circle at 35% 35%, #5352ed, #3742fa 60%, #1e3799);
+  box-shadow: 0 4px 15px rgba(55,66,250,.4), inset 0 -2px 4px rgba(0,0,0,.2);
+}
+.ball.gold {
+  background: radial-gradient(circle at 35% 35%, #eccc68, #ffa502 60%, #e67e22);
+  box-shadow: 0 4px 15px rgba(255,165,2,.4), inset 0 -2px 4px rgba(0,0,0,.2);
+  color: #2d1a00;
+}
+.ball-sep {
+  width: 20px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 300; color: var(--text3);
+}
+
+/* ── Prediction ── */
+.stepper-row {
+  display: flex; gap: 10px; align-items: center; margin-bottom: 16px;
+}
+.stepper {
+  display: flex; border-radius: var(--radius-xs); overflow: hidden;
+  border: 1px solid var(--border-light); background: var(--surface2);
+}
+.stepper button {
+  width: 40px; height: 42px; border: none; background: transparent;
+  color: var(--text); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.stepper button:active { background: rgba(255,255,255,.06); }
+.stepper .val {
+  width: 48px; text-align: center; font-size: 20px; font-weight: 800;
+  line-height: 42px; font-variant-numeric: tabular-nums;
+  background: var(--surface); border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+}
+.btn-primary {
+  flex: 1; height: 42px; border-radius: var(--radius-xs); border: none;
+  background: linear-gradient(135deg, #ff6348, #e74c3c);
+  color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+  cursor: pointer; transition: all .2s;
+  box-shadow: 0 4px 16px rgba(231,76,60,.3);
+}
+.btn-primary:active { transform: scale(0.97); opacity: .85; }
+.btn-primary:disabled { opacity: .35; transform: none; box-shadow: none; }
+.btn-primary .shake { animation: shake .4s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ── Pred Result ── */
+.pred-card {
+  background: var(--surface2); border-radius: var(--radius-sm);
+  padding: 14px 16px; margin-bottom: 10px;
+  border: 1px solid var(--border);
+  animation: slideUp .35s ease both;
+  position: relative; overflow: hidden;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.pred-card:first-child {
+  border-color: rgba(255,165,2,.3);
+  background: linear-gradient(145deg, #1e1e40, #1a1a3a);
+}
+.pred-card:first-child::after {
+  content: '🥇 最佳推荐'; position: absolute; top: 8px; right: 10px;
+  font-size: 10px; color: var(--gold); font-weight: 700;
+}
+.pred-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.pred-rank-badge {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+  background: var(--surface3);
+}
+.pred-card:first-child .pred-rank-badge {
+  background: linear-gradient(135deg, #ffa502, #ff6348);
+  box-shadow: 0 2px 10px rgba(255,165,2,.3);
+}
+.pred-balls-row {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+}
+.pred-ball {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800;
+}
+.pred-ball.red {
+  background: radial-gradient(circle at 35% 35%, #ff6b81, #e74c3c 60%, #c0392b);
+  box-shadow: 0 2px 8px rgba(231,76,60,.35);
+}
+.pred-ball.blue {
+  background: radial-gradient(circle at 35% 35%, #5352ed, #3742fa 60%, #1e3799);
+  box-shadow: 0 2px 8px rgba(55,66,250,.35);
+}
+.pred-ball.gold {
+  background: radial-gradient(circle at 35% 35%, #eccc68, #ffa502 60%, #e67e22);
+  box-shadow: 0 2px 8px rgba(255,165,2,.35); color: #2d1a00;
+}
+.pred-score-bar {
+  margin-top: 10px; display: flex; gap: 4px; align-items: center;
+}
+.score-fill {
+  flex: 1; height: 4px; border-radius: 2px; background: var(--surface3);
+  overflow: hidden;
+}
+.score-fill-inner {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, #ff6348, #ffa502);
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.score-val {
+  font-size: 11px; font-weight: 700; color: var(--text2); min-width: 60px; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.score-val span { color: var(--gold); }
+.pred-algo-tags {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px;
+}
+.algo-tag {
+  padding: 2px 8px; border-radius: 10px; font-size: 10px;
+  background: rgba(255,255,255,.04); color: var(--text3);
+  border: 1px solid rgba(255,255,255,.04);
+}
+
+/* ── Stats Grid ── */
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+.stat-box {
+  text-align: center; padding: 14px 8px;
+  background: var(--surface2); border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.stat-num {
+  font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, var(--gold), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-lbl { font-size: 11px; color: var(--text2); margin-top: 4px; font-weight: 500; }
+
+/* ── Frequency Bars ── */
+.pos-tabs {
+  display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.pos-tab {
+  padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text2); cursor: pointer; transition: all .2s;
+}
+.pos-tab.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  box-shadow: 0 2px 10px rgba(255,99,72,.3);
+}
+.bar-item {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+  font-size: 12px;
+}
+.bar-num {
+  width: 28px; text-align: right; font-weight: 700; color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+.bar-track {
+  flex: 1; height: 20px; background: var(--surface3); border-radius: 4px;
+  overflow: hidden; position: relative;
+}
+.bar-fill {
+  height: 100%; border-radius: 4px; min-width: 4px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 4px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.8);
+}
+.bar-fill.hot { background: linear-gradient(90deg, #ff4757, #ff6b81); }
+.bar-fill.warm { background: linear-gradient(90deg, #ffa502, #eccc68); }
+.bar-fill.cool { background: linear-gradient(90deg, #3742fa, #5352ed); }
+
+/* ── Hot/Cold Tags ── */
+.tag-section { margin-top: 14px; }
+.tag-section-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2);
+}
+.tag.hot { border-color: rgba(255,71,87,.4); color: var(--red2); }
+.tag.cold { border-color: rgba(55,66,250,.4); color: var(--blue2); }
+
+/* ── History Table ── */
+.history-wrap { max-height: 440px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.history-table { width: 100%; border-collapse: collapse; }
+.history-table th {
+  text-align: left; padding: 10px 8px; font-size: 11px; color: var(--text2);
+  font-weight: 600; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 2;
+}
+.history-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,.02); }
+.history-table .issue { font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.history-table .date { color: var(--text3); font-size: 11px; }
+.history-table .mini-balls { display: flex; gap: 3px; flex-wrap: wrap; }
+.mball {
+  width: 24px; height: 24px; border-radius: 50%;
+  font-size: 11px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center;
+}
+.mball.red { background: #e74c3c; }
+.mball.blue { background: #3742fa; }
+.mball.gold { background: #ffa502; color: #2d1a00; }
+.highlight-row { animation: highlight 1.5s ease; }
+@keyframes highlight { from { background: rgba(255,165,2,.1); } to { background: transparent; } }
+
+.btn-secondary {
+  width: 100%; padding: 12px; margin-top: 10px; border-radius: var(--radius-xs);
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text2); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-secondary:active { background: var(--surface3); color: var(--text); }
+
+/* ── Tab Bar ── */
+.tab-bar {
+  position: sticky; bottom: 0; z-index: 100;
+  display: flex; background: rgba(18,18,42,0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--border);
+  padding: 4px 0 var(--safe-bottom);
+}
+.tab-item {
+  flex: 1; padding: 8px 0; text-align: center; cursor: pointer;
+  font-size: 11px; color: var(--text2); font-weight: 600;
+  transition: all .2s; user-select: none; position: relative;
+}
+.tab-item .tab-ico { font-size: 22px; display: block; margin-bottom: 2px; transition: transform .2s; }
+.tab-item.active { color: var(--accent); }
+.tab-item.active .tab-ico { transform: scale(1.15); }
+.tab-item.active::after {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 24px; height: 3px; border-radius: 2px; background: var(--accent);
+}
+.tab-content { display: none; padding-bottom: 20px; }
+.tab-content.active { display: block; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+  padding: 10px 24px; border-radius: 24px; font-size: 13px; font-weight: 600;
+  background: var(--surface3); border: 1px solid var(--border-light);
+  color: var(--text); box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  pointer-events: none; opacity: 0; transition: opacity .3s, transform .3s;
+  transform: translateX(-50%) translateY(-8px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Loading ── */
+.loading-dots {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 28px; flex-direction: column;
+}
+.loading-dots .dots { display: flex; gap: 6px; }
+.loading-dots .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  animation: dotBounce .6s infinite alternate;
+}
+.loading-dots .dot:nth-child(2) { animation-delay: .15s; }
+.loading-dots .dot:nth-child(3) { animation-delay: .3s; }
+@keyframes dotBounce { to { transform: translateY(-10px); opacity: .4; } }
+.loading-dots .lbl { font-size: 12px; color: var(--text2); margin-top: 8px; }
+
+/* ── Skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-xs);
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+}
+.empty-icon { font-size: 48px; margin-bottom: 10px; }
+.empty-msg { color: var(--text2); font-size: 14px; }
+
+/* ── Responsive ── */
+@media (min-width: 420px) {
+  .ball { width: 50px; height: 50px; font-size: 22px; }
+  .pred-ball { width: 36px; height: 36px; font-size: 16px; }
+  .ticket-issue { font-size: 24px; }
+}
+
+/* ── Utility ── */
+.text-gold { color: var(--gold); }
+.text-red { color: var(--red2); }
+.text-blue { color: var(--blue2); }
+.fw-800 { font-weight: 800; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🦍</div>
+    <span>幸运猩</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="shareBtn" title="分享预测" style="display:none">📤</button>
+    <button class="icon-btn" id="refreshBtn" title="刷新数据">🔄</button>
+  </div>
+</header>
+
+<div class="game-switcher" id="gameSwitcher"></div>
+
+<!-- Next Draw Countdown -->
+<div class="countdown-bar" id="countdownBar" style="display:none">
+  <div class="cd-live" id="cdLive"></div>
+  <span class="cd-icon">⏳</span>
+  <div class="cd-info">
+    <div>下一期 <span class="cd-game" id="cdGame">-</span> 开奖</div>
+    <div class="cd-time" id="cdDesc">-</div>
+  </div>
+  <div class="cd-clock" id="cdClock">--:--:--</div>
+  <span class="cd-tag" id="cdTag">即将开奖</span>
+</div>
+
+<div class="container">
+
+  <!-- Latest Draw (Ticket Style) -->
+  <div class="ticket-card" id="ticketCard">
+    <div class="ticket-header">
+      <span class="ticket-game" id="ticketGame">-</span>
+      <span class="ticket-issue" id="ticketIssue">-</span>
+    </div>
+    <div class="ticket-numbers" id="ticketNumbers"></div>
+    <div class="ticket-date" id="ticketDate">-</div>
+  </div>
+
+  <!-- Tab: Predict -->
+  <div class="tab-content active" id="tab-predict">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🎯 智能预测</span>
+        <span class="card-subtitle" id="predictMeta"></span>
+      </div>
+      <div class="stepper-row">
+        <div class="stepper">
+          <button onclick="changeCount(-1)" aria-label="减少">−</button>
+          <div class="val" id="predCount">5</div>
+          <button onclick="changeCount(1)" aria-label="增加">+</button>
+        </div>
+        <button class="btn-primary" id="genBtn" onclick="generatePredict()">
+          🎲 生成预测
+        </button>
+      </div>
+      <div id="predResults">
+        <div class="empty-state">
+          <div class="empty-icon">🔮</div>
+          <div class="empty-msg">点击「生成预测」<br>基于 <span class="text-gold fw-800" id="dataRef">-</span> 期历史数据<br>7种算法交叉计算</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Analysis -->
+  <div class="tab-content" id="tab-analysis">
+    <div class="card">
+      <div class="card-header"><span class="card-title">📊 数据概览</span></div>
+      <div class="stats-row" id="statsGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🔥 号码频次分析</span></div>
+      <div class="pos-tabs" id="posTabs"></div>
+      <div id="freqChart"></div>
+      <div class="tag-section">
+        <div class="tag-section-label">📌 冷热号分布</div>
+        <div class="tag-cloud" id="tagCloud"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: History -->
+  <div class="tab-content" id="tab-history">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 历史开奖</span>
+        <span class="card-subtitle" id="historyCount">-</span>
+      </div>
+      <div class="history-wrap" id="historyWrap">
+        <table class="history-table">
+          <thead><tr><th>期号</th><th>日期</th><th>号码</th><th>和值</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <button class="btn-secondary" id="loadMoreBtn" onclick="loadMoreHistory()">📜 加载更多</button>
+    </div>
+  </div>
+</div>
+
+<nav class="tab-bar">
+  <div class="tab-item active" data-tab="predict" onclick="switchTab('predict')">
+    <span class="tab-ico">🎯</span>预测
+  </div>
+  <div class="tab-item" data-tab="analysis" onclick="switchTab('analysis')">
+    <span class="tab-ico">📊</span>分析
+  </div>
+  <div class="tab-item" data-tab="history" onclick="switchTab('history')">
+    <span class="tab-ico">📋</span>历史
+  </div>
+</nav>
+
+<script>
+// ═══ State ═══
+const API = window.location.origin + '/api';
+// 本地开发用: const API = 'http://localhost:8000/api';
+let currentGame = 'daletou';
+let gameConfigs = {};
+let predCount = 5;
+let historyPage = 1;
+let historyTotalPages = 1;
+let latestPredictions = null; // cache for share
+let statusData = null;
+let countdownTimer = null;
+let lastDataIssue = null;  // 记录已加载的最新期号，用于自动刷新检测
+
+// ═══ Init ═══
+async function init() {
+  try {
+    const res = await fetch(`${API}/games`);
+    if (!res.ok) throw new Error('API not available');
+    const games = await res.json();
+    games.forEach(g => { gameConfigs[g.key] = g; });
+    renderGameSwitcher(games);
+
+    // 🔄 打开页面立即检查并拉取最新数据
+    await fetch(`${API}/data/refresh`, { method: 'POST' }).catch(() => {});
+    // 重新加载游戏列表（可能新增了期数）
+    const games2 = await fetch(`${API}/games`).then(r => r.json()).catch(() => games);
+    games2.forEach(g => { gameConfigs[g.key] = g; });
+
+    await switchGame(currentGame);
+    // 启动状态轮询 & 倒计时
+    fetchStatus();
+    countdownTimer = setInterval(tickCountdown, 1000);
+    // 每 2 分钟检查是否有新数据
+    setInterval(checkNewData, 120000);
+  } catch (e) {
+    document.getElementById('ticketCard').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">🔌</div><div class="empty-msg">无法连接后端<br><small>请确保 API 服务已启动 (port 8000)</small></div></div>';
+  }
+}
+
+// ═══ System Status & Countdown ═══
+async function fetchStatus() {
+  try {
+    const r = await fetch(`${API}/status`);
+    statusData = await r.json();
+    // 记录当前彩种最新期号
+    const myDraw = statusData.next_draws?.find(d => d.key === currentGame);
+    if (myDraw && !lastDataIssue) lastDataIssue = myDraw.latest_issue;
+    updateCountdownUI();
+  } catch(e) { /* silent */ }
+}
+
+function tickCountdown() {
+  if (!statusData?.next_draws) return;
+  // Decrease all countdowns by 1
+  for (const d of statusData.next_draws) {
+    d.countdown_seconds = Math.max(0, d.countdown_seconds - 1);
+  }
+  updateCountdownUI();
+  // Refresh status from server every 5 minutes
+  const now = Date.now() / 1000;
+  if (!statusData._lastFetch || now - statusData._lastFetch > 300) {
+    statusData._lastFetch = now;
+    fetchStatus();
+  }
+}
+
+function updateCountdownUI() {
+  if (!statusData?.next_draws) return;
+  const match = statusData.next_draws.find(d => d.key === currentGame);
+  if (!match) return;
+
+  const bar = document.getElementById('countdownBar');
+  bar.style.display = 'flex';
+
+  document.getElementById('cdGame').textContent = match.name;
+  document.getElementById('cdDesc').textContent = match.schedule;
+
+  const sec = match.countdown_seconds;
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  document.getElementById('cdClock').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  // 距离开奖 < 30 分钟：即将开奖
+  const tag = document.getElementById('cdTag');
+  const live = document.getElementById('cdLive');
+  if (sec < 1800) {
+    tag.textContent = '即将开奖';
+    tag.style.background = 'rgba(255,165,2,.15)';
+    tag.style.color = 'var(--gold)';
+    live.style.background = 'var(--gold)';
+    live.style.animation = 'pulse .8s ease infinite';
+  } else if (sec < 7200) {
+    tag.textContent = '今日开奖';
+    tag.style.background = 'rgba(46,213,115,.15)';
+    tag.style.color = 'var(--green)';
+    live.style.background = 'var(--green)';
+    live.style.animation = 'pulse 1.5s ease infinite';
+  } else {
+    tag.textContent = '等待开奖';
+    tag.style.background = 'rgba(255,255,255,.06)';
+    tag.style.color = 'var(--text2)';
+    live.style.background = 'var(--text3)';
+    live.style.animation = 'none';
+  }
+}
+
+// ═══ Auto-refresh: 开奖后自动拉取新数据 ═══
+async function checkNewData() {
+  try {
+    const r = await fetch(`${API}/status`);
+    const st = await r.json();
+    const myDraw = st.next_draws?.find(d => d.key === currentGame);
+    if (!myDraw || !lastDataIssue) return;
+
+    if (myDraw.latest_issue && myDraw.latest_issue !== lastDataIssue) {
+      // 有新数据！
+      console.log(`🔄 检测到新数据: ${lastDataIssue} → ${myDraw.latest_issue}`);
+      lastDataIssue = myDraw.latest_issue;
+      statsCache = null;
+      await Promise.all([loadLatest(), loadStats(), loadHistory()]);
+      showToast(`🆕 第 ${myDraw.latest_issue} 期已开奖，数据已自动更新`);
+    }
+  } catch(e) { /* silent */ }
+}
+
+// ═══ Game Switcher ═══
+function renderGameSwitcher(games) {
+  document.getElementById('gameSwitcher').innerHTML = games.map(g =>
+    `<div class="game-chip" data-key="${g.key}" onclick="switchGame('${g.key}')">${g.icon} ${g.name}</div>`
+  ).join('');
+}
+
+async function switchGame(key) {
+  currentGame = key;
+  predCount = 5;
+  historyPage = 1;
+  latestPredictions = null;
+  document.getElementById('predCount').textContent = predCount;
+  document.getElementById('predResults').innerHTML =
+    '<div class="empty-state"><div class="empty-icon">🔮</div><div class="empty-msg">点击「生成预测」<br>基于 <span class="text-gold fw-800" id="dataRef">-</span> 期历史数据<br>7种算法交叉计算</div></div>';
+  document.getElementById('shareBtn').style.display = 'none';
+
+  document.querySelectorAll('.game-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.key === key));
+
+  // 切换彩种时检查最新数据
+  fetch(`${API}/data/refresh`, { method: 'POST' }).catch(() => {});
+  await Promise.all([loadLatest(), loadStats(), loadHistory()]);
+}
+
+// ═══ Latest Draw (Ticket Style) ═══
+async function loadLatest() {
+  try {
+    const res = await fetch(`${API}/${currentGame}/latest`);
+    const d = await res.json();
+    const cfg = gameConfigs[currentGame];
+
+    document.getElementById('ticketGame').textContent = d.game;
+    document.getElementById('ticketIssue').textContent = `第 ${d.issue} 期`;
+    document.getElementById('ticketDate').textContent = `📅 ${d.date}`;
+    document.getElementById('dataRef').textContent = cfg.record_count || '-';
+
+    // 记录已加载的期号，用于检测新数据
+    if (d.issue) lastDataIssue = d.issue;
+
+    const el = document.getElementById('ticketNumbers');
+    if (cfg.key === 'daletou') {
+      el.innerHTML =
+        d.numbers.slice(0,5).map((n,i) =>
+          `<div class="ball red" style="animation-delay:${i*0.06}s">${String(n).padStart(2,'0')}</div>`
+        ).join('') +
+        '<div class="ball-sep">+</div>' +
+        d.numbers.slice(5).map((n,i) =>
+          `<div class="ball blue" style="animation-delay:${(i+5)*0.06}s">${String(n).padStart(2,'0')}</div>`
+        ).join('');
+    } else {
+      el.innerHTML = d.numbers.map((n,i) =>
+        `<div class="ball gold" style="animation-delay:${i*0.06}s">${String(n).padStart(2,'0')}</div>`
+      ).join('');
+    }
+  } catch (e) { console.error(e); }
+}
+
+// ═══ Stats & Analysis ═══
+let statsCache = null;
+
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/${currentGame}/stats`);
+    statsCache = await res.json();
+    const d = statsCache;
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-box"><div class="stat-num">${d.record_count}</div><div class="stat-lbl">历史期数</div></div>
+      <div class="stat-box"><div class="stat-num">${d.date_from?.slice(0,7)||'-'}</div><div class="stat-lbl">数据起点</div></div>
+      <div class="stat-box"><div class="stat-num">${d.latest_issue||'-'}</div><div class="stat-lbl">最新期号</div></div>
+    `;
+
+    // Position tabs
+    const posLabels = gameConfigs[currentGame].position_labels;
+    document.getElementById('posTabs').innerHTML = d.frequency.map((f, i) =>
+      `<div class="pos-tab ${i===0?'active':''}" onclick="switchPos(${i})">${f.position}</div>`
+    ).join('');
+    renderFreq(d.frequency[0]);
+
+    // Tag cloud: hot + cold
+    document.getElementById('tagCloud').innerHTML =
+      d.hot_numbers.slice(0,6).map(n =>
+        `<span class="tag hot">🔥 ${n.label}</span>`).join('') +
+      d.cold_numbers.slice(0,6).map(n =>
+        `<span class="tag cold">❄️ ${n.label}</span>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+function switchPos(i) {
+  document.querySelectorAll('.pos-tab').forEach((t, idx) =>
+    t.classList.toggle('active', idx === i));
+  if (statsCache) renderFreq(statsCache.frequency[i]);
+}
+
+function renderFreq(freqData) {
+  if (!freqData?.data?.length) return;
+  const maxC = Math.max(...freqData.data.map(d => d.count), 1);
+  document.getElementById('freqChart').innerHTML = freqData.data.map(d => {
+    const pct = Math.round(d.count / maxC * 100);
+    const cls = pct > 70 ? 'hot' : pct > 35 ? 'warm' : 'cool';
+    return `<div class="bar-item">
+      <span class="bar-num">${String(d.number).padStart(2,'0')}</span>
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${Math.max(pct,4)}%">${pct > 30 ? d.count : ''}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ Prediction ═══
+function changeCount(d) {
+  predCount = Math.max(1, Math.min(20, predCount + d));
+  document.getElementById('predCount').textContent = predCount;
+}
+
+async function generatePredict() {
+  const btn = document.getElementById('genBtn');
+  const el = document.getElementById('predResults');
+  btn.disabled = true;
+  btn.textContent = '⏳ 计算中...';
+  el.innerHTML = '<div class="loading-dots"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="lbl">蒙特卡洛模拟进行中...</div></div>';
+
+  try {
+    const res = await fetch(`${API}/${currentGame}/predict?count=${predCount}`);
+    const d = await res.json();
+    const cfg = gameConfigs[currentGame];
+    latestPredictions = d;
+
+    document.getElementById('shareBtn').style.display = 'flex';
+    document.getElementById('predictMeta').textContent =
+      `基于 ${d.data_based_on.split(' ')[0]} 期数据`;
+
+    const topScore = d.predictions[0]?.total_score || 1;
+
+    el.innerHTML = d.predictions.map((p, i) => {
+      let ballsHtml;
+      if (cfg.key === 'daletou') {
+        ballsHtml =
+          p.numbers[0].map(n => `<span class="pred-ball red">${String(n).padStart(2,'0')}</span>`).join('') +
+          '<span style="margin:0 3px;color:var(--text3);font-weight:300">+</span>' +
+          p.numbers[1].map(n => `<span class="pred-ball blue">${String(n).padStart(2,'0')}</span>`).join('');
+      } else {
+        ballsHtml = p.numbers.map(ns =>
+          `<span class="pred-ball gold">${String(ns[0]).padStart(2,'0')}</span>`).join('');
+      }
+
+      const scorePct = Math.round(p.total_score / topScore * 100);
+      const algoTags = Object.entries(p.scores)
+        .sort((a,b) => b[1]-a[1])
+        .slice(0,6)
+        .map(([k,v]) => {
+          const pct = Math.round(v * 100);
+          const cls = pct >= 80 ? 'style="color:var(--green)"' : pct >= 50 ? 'style="color:var(--gold)"' : '';
+          return `<span class="algo-tag" ${cls}>${k} ${pct}</span>`;
+        }).join('');
+
+      return `<div class="pred-card" style="animation-delay:${i*0.05}s">
+        <div class="pred-head">
+          <div class="pred-rank-badge">${p.rank}</div>
+          <div class="pred-score-bar">
+            <div class="score-fill"><div class="score-fill-inner" style="width:${scorePct}%"></div></div>
+            <div class="score-val"><span>${p.total_score.toFixed(4)}</span> · ${scorePct}%</div>
+          </div>
+        </div>
+        <div class="pred-balls-row">${ballsHtml}</div>
+        <div class="pred-algo-tags">${algoTags}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-msg">生成失败，请重试</div></div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🎲 生成预测';
+  }
+}
+
+// ═══ Share ═══
+document.getElementById('shareBtn').addEventListener('click', () => {
+  if (!latestPredictions) return;
+  const cfg = gameConfigs[currentGame];
+  const lines = [`🦍 幸运猩 · ${cfg.name} 预测`, ''];
+  latestPredictions.predictions.slice(0,5).forEach(p => {
+    let nums;
+    if (cfg.key === 'daletou') {
+      nums = p.numbers[0].map(n=>String(n).padStart(2,'0')).join(' ') + ' + ' +
+             p.numbers[1].map(n=>String(n).padStart(2,'0')).join(' ');
+    } else {
+      nums = p.numbers.map(ns=>String(ns[0]).padStart(2,'0')).join(' ');
+    }
+    lines.push(`#${p.rank}  ${nums}  (${(p.total_score*100).toFixed(0)}分)`);
+  });
+  lines.push('', `基于 ${latestPredictions.data_based_on}`);
+
+  const text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: '幸运猩预测', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 已复制到剪贴板'));
+  }
+});
+
+// ═══ History ═══
+async function loadHistory(page = 1) {
+  try {
+    const res = await fetch(`${API}/${currentGame}/history?page=${page}&page_size=30`);
+    const d = await res.json();
+    document.getElementById('historyCount').textContent = `共 ${d.total_count} 期`;
+    historyTotalPages = d.total_pages;
+    historyPage = page;
+
+    const cfg = gameConfigs[currentGame];
+    const tbody = document.getElementById('historyBody');
+    const rows = d.items.map((item, idx) => {
+      let nHtml;
+      if (cfg.key === 'daletou') {
+        nHtml = item.numbers.slice(0,5).map(n =>
+          `<span class="mball red">${String(n).padStart(2,'0')}</span>`).join('') +
+          item.numbers.slice(5).map(n =>
+          `<span class="mball blue">${String(n).padStart(2,'0')}</span>`).join('');
+      } else {
+        nHtml = item.numbers.map(n =>
+          `<span class="mball gold">${String(n).padStart(2,'0')}</span>`).join('');
+      }
+      const sum = item.numbers.reduce((a,b) => a+b, 0);
+      return `<tr${page===1&&idx===0?' class="highlight-row"':''}>
+        <td class="issue">${item.issue}</td>
+        <td class="date">${item.date.slice(5)}</td>
+        <td><div class="mini-balls">${nHtml}</div></td>
+        <td style="font-weight:700;font-variant-numeric:tabular-nums">${sum}</td>
+      </tr>`;
+    }).join('');
+
+    if (page === 1) {
+      tbody.innerHTML = rows;
+      document.getElementById('historyWrap').scrollTop = 0;
+    } else {
+      tbody.insertAdjacentHTML('beforeend', rows);
+    }
+
+    document.getElementById('loadMoreBtn').style.display =
+      historyPage < historyTotalPages ? 'block' : 'none';
+  } catch (e) { console.error(e); }
+}
+
+function loadMoreHistory() {
+  if (historyPage < historyTotalPages) loadHistory(historyPage + 1);
+}
+
+// ═══ Tabs ═══
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(c =>
+    c.classList.toggle('active', c.id === `tab-${tab}`));
+}
+
+// ═══ Refresh ═══
+document.getElementById('refreshBtn').addEventListener('click', async function() {
+  this.classList.add('spinning');
+  try {
+    const r = await fetch(`${API}/data/refresh`, { method: 'POST' });
+    const d = await r.json();
+    const added = d.results?.[currentGame]?.added || 0;
+    showToast(added > 0 ? `✅ 新增 ${added} 期数据` : '✓ 已是最新');
+
+    const gr = await fetch(`${API}/games`);
+    const games = await gr.json();
+    games.forEach(g => { gameConfigs[g.key] = g; });
+    statsCache = null;
+    await Promise.all([loadLatest(), loadStats(), loadHistory()]);
+  } catch (e) {
+    showToast('⚠️ 刷新失败');
+  } finally {
+    this.classList.remove('spinning');
+  }
+});
+
+// ═══ Toast ═══
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  el.textContent = msg;
+  el.classList.add('show');
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ═══ Start ═══
+init();
+</script>
+</body>
+</html>
