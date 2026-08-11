@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 
 from config import ALL_GAMES, GameConfig
 from db import init_table, load_all, count as db_count, get_latest_issue
-from data_fetcher import fetch_latest
+from data_fetcher import fetch_latest, fetch_full
 from predictor import predict
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -144,9 +144,15 @@ def scheduled_fetch():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """启动时加载数据 + 启动定时刷新。"""
+    """启动时加载数据 + 自动全量抓取（如无数据）+ 启动定时刷新。"""
     global scheduler
     print("🚀 幸运猩 API 启动中...")
+    # 首次全量抓取
+    for key, cfg in ALL_GAMES.items():
+        init_table(cfg)
+        if db_count(cfg) < 100:
+            print(f"  📡 [{cfg.name}] 数据不足，开始全量抓取...")
+            fetch_full(cfg)
     refresh_cache()
     for key, data in cache.items():
         print(f"  ✅ {data['config'].name} — {data['record_count']} 期")
